@@ -48,65 +48,67 @@ struct ContentView: View {
     }
     
     var body: some View {
-        ZStack{
-            SmartSpectraView()
+        VStack{
+            ZStack{
+                SmartSpectraView()
 
-            // face mesh display
-            if let edgeMetrics = sdk.edgeMetrics,
-                edgeMetrics.hasFace && !edgeMetrics.face.landmarks.isEmpty && isFaceMeshEnabled {
-                // Visual representation of mesh points from edge metrics
-                if let latestLandmarks = edgeMetrics.face.landmarks.last {
-                    GeometryReader { geometry in
-                        ZStack {
-                            ForEach(Array(latestLandmarks.value.enumerated()), id: \.offset) { index, landmark in
-                                Circle()
-                                    .fill(Color.blue)
-                                    .frame(width: 3, height: 3)
-                                    .position(x: CGFloat(landmark.x) * geometry.size.width / 1280.0,
-                                            y: CGFloat(landmark.y) * geometry.size.height / 1280.0)
+                // face mesh display
+                if let edgeMetrics = sdk.edgeMetrics,
+                    edgeMetrics.hasFace && !edgeMetrics.face.landmarks.isEmpty && isFaceMeshEnabled {
+                    // Visual representation of mesh points from edge metrics
+                    if let latestLandmarks = edgeMetrics.face.landmarks.last {
+                        GeometryReader { geometry in
+                            ZStack {
+                                ForEach(Array(latestLandmarks.value.enumerated()), id: \.offset) { index, landmark in
+                                    Circle()
+                                        .fill(Color.blue)
+                                        .frame(width: 3, height: 3)
+                                        .position(x: CGFloat(landmark.x) * geometry.size.width / 1280.0,
+                                                y: CGFloat(landmark.y) * geometry.size.height / 1280.0)
+                                }
                             }
                         }
+                        .frame(width: 400, height: 400) // Adjust the height as needed
                     }
-                    .frame(width: 400, height: 400) // Adjust the height as needed
                 }
+            }.frame(width: 400, height: 400) // Adjust the height as needed
+    /*
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("healthvision")
+                    .font(.headline)
+                Spacer()
+                Toggle("Face Mesh", isOn: $isFaceMeshEnabled)
+                    .labelsHidden()
             }
+
+            metricRow(title: "Pulse", value: pulseBpm, unit: "BPM")
+            metricRow(title: "Breathing", value: breathingBpm, unit: "BPM")
         }
-/*
-    VStack(alignment: .leading, spacing: 10) {
-        HStack {
-            Text("healthvision")
-                .font(.headline)
-            Spacer()
-            Toggle("Face Mesh", isOn: $isFaceMeshEnabled)
-                .labelsHidden()
-        }
+    */
+        // display charts on the UI
+        ScrollView{
+            VStack{
+                if let metrics = sdk.metricsBuffer{
+                    let pulse = metrics.pulse
+                    let breathing = metrics.breathing
+                    let bloodPressure = metrics.bloodPressure
+                    let face = metrics.face
 
-        metricRow(title: "Pulse", value: pulseBpm, unit: "BPM")
-        metricRow(title: "Breathing", value: breathingBpm, unit: "BPM")
-    }
-*/
-    // display charts on the UI
-    ScrollView{
-        VStack{
-            if let metrics = sdk.metricsBuffer{
-                let pulse = metrics.pulse
-                let breathing = metrics.breathing
-                let bloodPressure = metrics.bloodPressure
-                let face = metrics.face
-
-                Section("Breathing"){
-                    if !breathing.rate.isEmpty {
-                        LineChartView(orderedPairs: breathing.rate.map { ($0.time, $0.value) }, title: "Breathing Rates", xLabel: "Time", yLabel: "Value", showYTicks: true)
-                        LineChartView(orderedPairs: breathing.rate.map { ($0.time, $0.confidence) }, title: "Breathing Rate Confidence", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                    Section("Breathing"){
+                        if !breathing.rate.isEmpty {
+                            LineChartView(orderedPairs: breathing.rate.map { ($0.time, $0.value) }, title: "Breathing Rates", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                            LineChartView(orderedPairs: breathing.rate.map { ($0.time, $0.confidence) }, title: "Breathing Rate Confidence", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                        }
+                        if !breathing.inhaleExhaleRatio.isEmpty {
+                            LineChartView(orderedPairs: breathing.inhaleExhaleRatio.map { ($0.time, $0.value) }, title: "Inhale-Exhale Ratio", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                        }
                     }
-                    if !breathing.inhaleExhaleRatio.isEmpty {
-                        LineChartView(orderedPairs: breathing.inhaleExhaleRatio.map { ($0.time, $0.value) }, title: "Inhale-Exhale Ratio", xLabel: "Time", yLabel: "Value", showYTicks: true)
-                    }
-                }
 
-                Section("Face"){
-                    if !face.blinking.isEmpty {
-                        LineChartView(orderedPairs: face.blinking.map { ($0.time, $0.detected ? 1.0 : 0.0) }, title: "Blinking", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                    Section("Face"){
+                        if !face.blinking.isEmpty {
+                            LineChartView(orderedPairs: face.blinking.map { ($0.time, $0.detected ? 1.0 : 0.0) }, title: "Blinking", xLabel: "Time", yLabel: "Value", showYTicks: true)
+                        }
                     }
                 }
             }
