@@ -8,8 +8,6 @@
 import SwiftUI
 import SmartSpectraSwiftSDK
 
-let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
-
 struct ContentView: View {
     @State private var isFaceMeshEnabled = true
     @ObservedObject var sdk = SmartSpectraSwiftSDK.shared
@@ -50,7 +48,7 @@ struct ContentView: View {
     }
     
     var body: some View {
-        Zstack{
+        ZStack{
             SmartSpectraView()
 
             // face mesh display
